@@ -50,9 +50,9 @@ type WyrResponse struct {
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("received request...")
 	blankResponse := &WyrResponse{}
-	grabContent(blankResponse)
-	log.Printf("got response from grabContent: %s", blankResponse.Data)
-
+	//grabContent(blankResponse)
+	//log.Printf("got response from grabContent: %s", blankResponse.Data)
+	genErrorResponse(blankResponse, fmt.Errorf("test"))
 	log.Printf("converting to PNG...")
 
 	//imgBytes, err := contentToImage(blankResponse.Data)
