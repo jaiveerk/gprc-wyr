@@ -14,7 +14,7 @@
   },
   "customHandler": {
     "description": {
-      "defaultExecutablePath": "wyr-image",
+      "defaultExecutablePath": "wyr-image.exe",
       "workingDirectory": "",
       "arguments": []
     },

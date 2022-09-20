@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
@@ -31,7 +30,7 @@ var (
 )
 
 func init() {
-	fontBytes, err := ioutil.ReadFile(fontFile)
+	fontBytes, err := os.ReadFile(fontFile)
 
 	if err != nil {
 		log.Printf("Error during init: %s", err)
