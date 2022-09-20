@@ -101,10 +101,19 @@ func grabContent(target *WyrResponse) {
 }
 
 func contentToImage(content string) ([]byte, error) {
-	img := image.NewRGBA(image.Rect(0, 0, 9*len(content), 50))
-	col := color.RGBA{R: 0, G: 0, B: 0, A: 255}
-	point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(30)}
+	width := 9 * len(content)
+	height := 50
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	blk := color.RGBA{R: 50, G: 49, B: 48, A: 255}
 
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
+			img.Set(i, j, blk)
+		}
+	}
+
+	col := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(30)}
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(col),
