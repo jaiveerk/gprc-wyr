@@ -44,19 +44,13 @@ func init() {
 	}
 }
 
-type WyrResponse struct {
-	id   string
-	Data string
-}
-
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("received request...")
-	blankResponse := &WyrResponse{}
-	grabContent(blankResponse)
-	log.Printf("got response from grabContent: %s", blankResponse.Data)
+	content := grabContent()
+	log.Printf("got response from grabContent: %s", content)
 	log.Printf("converting to PNG...")
 
-	imgBytes, err := contentToImage(blankResponse.Data)
+	imgBytes, err := contentToImage(content)
 	//err := png.Encode(w, img)
 	if err != nil {
 		log.Printf("ERROR: while encoding image to PNG: %s", err)
@@ -68,36 +62,18 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func genErrorResponse(target *WyrResponse, err error) {
-	target.Data = fmt.Sprintf("Would you rather that this worked, or that it didn't (cause there seems to be something wrong this is an error message haha: \n %s)?", err)
+func genErrorResponse(err error) string {
+	return fmt.Sprintf("Would you rather that this worked, or that it didn't (cause there seems to be something wrong this is an error message haha: \n %s)?", err)
 }
 
-//func grabContent(target *WyrResponse) {
-//	log.Printf("received request")
-//	resp, err := http.Get(url)
-//
-//	if err != nil {
-//		log.Printf("Encountered error while trying to get question: %s", err)
-//		genErrorResponse(target, err)
-//	}
-//
-//	defer resp.Body.Close()
-//
-//	err = json.NewDecoder(resp.Body).Decode(target)
-//
-//	if err != nil {
-//		genErrorResponse(target, err)
-//	}
-//}
-
-func grabContent(target *WyrResponse) {
+func grabContent() string {
 	randomNumber, err := rand.Int(rand.Reader, big.NewInt(int64(len(questions))))
 
 	if err != nil {
 		log.Printf("encountered error while trying to generate question index: %s", err)
-		genErrorResponse(target, err)
+		return genErrorResponse(err)
 	} else {
-		target.Data = questions[randomNumber.Int64()]
+		return questions[randomNumber.Int64()]
 	}
 }
 
