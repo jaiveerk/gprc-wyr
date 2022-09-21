@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/math/fixed"
 	"image"
 	"image/color"
 	"image/png"
@@ -11,17 +16,13 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
-	"golang.org/x/image/math/fixed"
+	"strings"
 )
 
 const (
-	url      = "https://would-you-rather-api.abaanshanid.repl.co/"
-	fontFile = "UbuntuMono-R.ttf"
+	url        = "https://would-you-rather-api.abaanshanid.repl.co/"
+	fontFile   = "UbuntuMono-R.ttf"
+	lineLength = 150
 )
 
 var (
@@ -101,8 +102,9 @@ func grabContent(target *WyrResponse) {
 }
 
 func contentToImage(content string) ([]byte, error) {
-	width := 9 * len(content)
-	height := 50
+	contentLength := len(content)
+	width := 8 * lineLength
+	height := 25 * ((contentLength / lineLength) + 1)
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	blk := color.RGBA{R: 50, G: 49, B: 48, A: 255}
 
@@ -112,15 +114,20 @@ func contentToImage(content string) ([]byte, error) {
 		}
 	}
 
-	col := color.RGBA{R: 255, G: 255, B: 255, A: 255}
-	point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(30)}
-	d := &font.Drawer{
-		Dst:  img,
-		Src:  image.NewUniform(col),
-		Face: basicfont.Face7x13,
-		Dot:  point,
+	whiteText := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	lines := splitText(content)
+
+	for i, line := range lines {
+		point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(20 * (i + 1))}
+		d := &font.Drawer{
+			Dst:  img,
+			Src:  image.NewUniform(whiteText),
+			Face: basicfont.Face7x13,
+			Dot:  point,
+		}
+		d.DrawString(line)
+
 	}
-	d.DrawString(content)
 
 	b := new(bytes.Buffer)
 	if err := png.Encode(b, img); err != nil {
@@ -128,6 +135,31 @@ func contentToImage(content string) ([]byte, error) {
 		return nil, err
 	}
 	return b.Bytes(), nil
+}
+
+func splitText(content string) []string {
+	contentLength := len(content)
+	if contentLength < lineLength {
+		return []string{content}
+	}
+	var lines []string
+
+	words := strings.Split(content, " ")
+
+	for i := 0; i < len(words); {
+		currentBuilder := strings.Builder{}
+		currentLength := 0
+
+		for currentLength < lineLength && i < len(words) {
+			currentBuilder.WriteString(words[i] + " ")
+			currentLength = currentLength + len(words[i]) + 1
+			i++
+		}
+		lines = append(lines, currentBuilder.String())
+	}
+
+	log.Printf("lines are %s", lines)
+	return lines
 }
 
 func main() {
