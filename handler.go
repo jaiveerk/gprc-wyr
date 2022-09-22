@@ -91,7 +91,6 @@ func contentToImage(content string) ([]byte, error) {
 		}
 	}
 
-	//whiteText := color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	lines := splitText(content)
 
 	c := freetype.NewContext()
@@ -112,18 +111,6 @@ func contentToImage(content string) ([]byte, error) {
 		}
 		pt.Y += c.PointToFixed(fontSize)
 	}
-
-	//for i, line := range lines {
-	//	point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(20 * (i + 1))}
-	//	d := &font.Drawer{
-	//		Dst:  img,
-	//		Src:  image.NewUniform(whiteText),
-	//		Face: basicfont.Face7x13,
-	//		Dot:  point,
-	//	}
-	//	d.DrawString(line)
-	//
-	//}
 
 	b := new(bytes.Buffer)
 	if err := png.Encode(b, img); err != nil {
