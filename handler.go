@@ -3,12 +3,10 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
+	_ "embed"
 	"fmt"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
-	"golang.org/x/image/math/fixed"
 	"image"
 	"image/color"
 	"image/png"
@@ -22,10 +20,13 @@ import (
 const (
 	url        = "https://would-you-rather-api.abaanshanid.repl.co/"
 	fontFile   = "UbuntuMono-R.ttf"
-	lineLength = 150
+	lineLength = 60
+	fontSize   = 20
+	dpi        = 72
 )
 
 var (
+	//go:embed UbuntuMono-R.ttf
 	fontBytes []byte
 	f         *truetype.Font
 )
@@ -79,8 +80,8 @@ func grabContent() string {
 
 func contentToImage(content string) ([]byte, error) {
 	contentLength := len(content)
-	width := 8 * lineLength
-	height := 25 * ((contentLength / lineLength) + 1)
+	width := 12 * lineLength
+	height := (fontSize + 10) * ((contentLength / lineLength) + 1)
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	blk := color.RGBA{R: 50, G: 49, B: 48, A: 255}
 
@@ -90,20 +91,39 @@ func contentToImage(content string) ([]byte, error) {
 		}
 	}
 
-	whiteText := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	//whiteText := color.RGBA{R: 255, G: 255, B: 255, A: 255}
 	lines := splitText(content)
 
-	for i, line := range lines {
-		point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(20 * (i + 1))}
-		d := &font.Drawer{
-			Dst:  img,
-			Src:  image.NewUniform(whiteText),
-			Face: basicfont.Face7x13,
-			Dot:  point,
-		}
-		d.DrawString(line)
+	c := freetype.NewContext()
+	c.SetFontSize(fontSize)
+	c.SetFont(f)
+	c.SetDst(img)
+	c.SetDPI(dpi)
+	c.SetSrc(image.White)
+	c.SetClip(img.Bounds())
 
+	// Draw the text.
+	pt := freetype.Pt(10, 10+int(c.PointToFixed(fontSize)>>6))
+	for _, s := range lines {
+		_, err := c.DrawString(s, pt)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		pt.Y += c.PointToFixed(fontSize)
 	}
+
+	//for i, line := range lines {
+	//	point := fixed.Point26_6{X: fixed.I(20), Y: fixed.I(20 * (i + 1))}
+	//	d := &font.Drawer{
+	//		Dst:  img,
+	//		Src:  image.NewUniform(whiteText),
+	//		Face: basicfont.Face7x13,
+	//		Dot:  point,
+	//	}
+	//	d.DrawString(line)
+	//
+	//}
 
 	b := new(bytes.Buffer)
 	if err := png.Encode(b, img); err != nil {
